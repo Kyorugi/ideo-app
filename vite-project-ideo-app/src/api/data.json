@@ -1,5 +1,5 @@
 {
-  "offerings": [
+  "services": [
     {
       "name": "Internet",
       "prices": {
@@ -31,10 +31,10 @@
         "2024": 29,
         "2025": 29
       },
-      "dependentOfferings": "Telewizja"
+      "dependentServices": "Telewizja"
     }
   ],
-  "services-offerings": [
+  "servicePackages": [
     {
       "name": "Internet + telewizja",
       "prices": {
@@ -42,7 +42,7 @@
         "2024": 89,
         "2025": 99
       },
-      "offerings": ["Internet", "Telewizja"]
+      "services": ["Internet", "Telewizja"]
     },
     {
       "name": "Internet + Abonament telefoniczny",
@@ -51,7 +51,7 @@
         "2024": 64,
         "2025": 64
       },
-      "offerings": ["Internet", "Abonament telefoniczny"]
+      "services": ["Internet", "Abonament telefoniczny"]
     }
   ]
 }
