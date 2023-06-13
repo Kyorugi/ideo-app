@@ -8,7 +8,7 @@ interface Service {
   prices: {
     [year: string]: number;
   };
-  dependantServices?: string;
+  dependentServices?: string;
 }
 
 interface ServicePackage {
@@ -26,6 +26,7 @@ interface Data {
 function App() {
   const [data, setData] = useState<Data | null>(null);
   const [availableYears, setAvailableYears] = useState<string[]>([]);
+  const [servicesName, setServicesName] = useState<String[]>([]);
 
   const fetchData = async () => {
     try {
@@ -57,13 +58,11 @@ function App() {
   }, [data]);
 
   useEffect(() => {
-    // Aktualizuj dostępne lata, gdy dane zostaną zmienione
+    // updating the available years when the data changes
     if (data) {
-      const years = Object.keys(
-        data.services.reduce((acc, service) => {
-          return { ...acc, ...service.prices };
-        }, {})
-      );
+      const years = data.services
+        .filter((service) => !("dependentServices" in service))
+        .flatMap((service) => Object.keys(service.prices));
 
       const packageYears = Object.keys(
         data.servicePackages.reduce((acc, servicePackage) => {
@@ -73,9 +72,17 @@ function App() {
 
       const allYears = Array.from(new Set([...years, ...packageYears]));
       const sortedAllYears = allYears.sort((a, b) => Number(a) - Number(b));
-      console.log(sortedAllYears[0]);
 
       setAvailableYears(sortedAllYears);
+
+      //checking available services, setting an exception on dependent services
+      const filteredServices = data.services.filter(
+        (service) => !service.dependentServices
+      );
+      const servicesName = filteredServices.map((service) => service.name);
+      console.log(servicesName);
+
+      setServicesName(servicesName);
     }
   }, [data]);
 
@@ -90,7 +97,7 @@ function App() {
       </div>
       <div>
         <h1>Kalkulator oferty Lorem Ipsum Telecomunication</h1>
-        <label htmlFor="year-select">Select Year: </label>
+        <label htmlFor="year-select">Wybierz rok: </label>
         <select id="year-select">
           <option value="">-- Wybierz rok --</option>
           {availableYears.map((year) => (
@@ -99,6 +106,15 @@ function App() {
             </option>
           ))}
         </select>
+      </div>
+      <div>
+        <label>Wybierz usługę:</label>
+        {servicesName.map((service, index) => (
+          <button key={index}>{service}</button>
+        ))}
+      </div>
+      <div>
+        <label>Cena wybranej usługi</label>
       </div>
     </>
   );
