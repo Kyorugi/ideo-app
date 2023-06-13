@@ -36,9 +36,10 @@ function App() {
 
   useEffect(() => {
     fetchData();
-  }, []);
-
-  console.log(data);
+    if (data !== null) {
+      console.log(data);
+    }
+  }, [data]);
 
   return (
     <>
