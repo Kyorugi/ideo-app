@@ -88,7 +88,6 @@ function App() {
       );
       const servicesName = filteredServices.map((service) => service.name);
       console.log(servicesName);
-
       setServicesName(servicesName);
     }
   }, [data]);
@@ -97,6 +96,7 @@ function App() {
   const handleSelectedYear = (event: ChangeEvent<HTMLSelectElement>) => {
     setSelectedYear(event.target.value);
   };
+
   // Function to handle the click event on a service button
   const handleServiceClick = (service: string) => {
     if (selectedService.includes(service)) {
@@ -133,6 +133,21 @@ function App() {
     setNewPrice(newPrice);
     console.log(newPrice);
     console.log("wybrana usługa", selectedService);
+
+    if (data) {
+      const servicesWithDependentServices = data.services.filter((service) => {
+        if (service.dependentServices) {
+          return selectedService.includes(service.dependentServices);
+        }
+        return true;
+      });
+
+      const servicesName = servicesWithDependentServices.map(
+        (service) => service.name
+      );
+      setServicesName(servicesName);
+      console.log(servicesName);
+    }
   }, [selectedService, selectedYear, data]);
 
   return (
@@ -162,17 +177,23 @@ function App() {
       </div>
       <div>
         <label>Wybierz usługę:</label>
-        {servicesName.map((service, index) => (
-          <button
-            key={index}
-            onClick={() => handleServiceClick(service)}
-            style={{
-              background: selectedService.includes(service) ? "green" : "white",
-            }}
-          >
-            {service}
-          </button>
-        ))}
+        {servicesName.map((service, index) => {
+          const isSelected = selectedService.includes(service);
+          const isYearSelected = selectedYear !== "";
+          return (
+            <button
+              key={index}
+              onClick={() => handleServiceClick(service)}
+              style={{
+                background: isSelected ? "green" : "white",
+                pointerEvents: isYearSelected ? "auto" : "none",
+              }}
+              disabled={!isYearSelected}
+            >
+              {service}
+            </button>
+          );
+        })}
       </div>
       <div>
         <label>Cena wybranej usługi:</label>
