@@ -17,16 +17,6 @@
       }
     },
     {
-      "name": "Netflix",
-      "prices": {
-        "2023": 29,
-        "2024": 29,
-        "2025": 29,
-        "2026": 30
-      },
-      "dependentServices": "Internet"
-    },
-    {
       "name": "Abonament telefoniczny",
       "prices": {
         "2023": 29,
@@ -42,6 +32,16 @@
         "2025": 29
       },
       "dependentServices": "Telewizja"
+    },
+    {
+      "name": "Netflix",
+      "prices": {
+        "2023": 29,
+        "2024": 29,
+        "2025": 29,
+        "2026": 30
+      },
+      "dependentServices": "Internet"
     }
   ],
   "servicePackages": [
