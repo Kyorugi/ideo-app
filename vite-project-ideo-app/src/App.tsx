@@ -34,6 +34,7 @@ function App() {
     number | null
   >(null);
   const [newPrice, setNewPrice] = useState<number>();
+  const [servicePackages, setServicePackages] = useState<ServicePackage[]>([]);
 
   const fetchData = async () => {
     try {
@@ -41,6 +42,7 @@ function App() {
         console.log("Błędna struktura bazy danych");
       } else {
         setData(jsonData as Data);
+        setServicePackages(jsonData.servicePackages);
       }
     } catch (error) {
       console.log("Wystąpił błąd podczas pobierania danych", error);
@@ -67,14 +69,18 @@ function App() {
   useEffect(() => {
     // updating the available years when the data changes
     if (data) {
-      const years = data.services
-        .filter((service) => !("dependentServices" in service))
-        .flatMap((service) => Object.keys(service.prices));
-
-      const packageYears = Object.keys(
-        data.servicePackages.reduce((acc, servicePackage) => {
-          return { ...acc, ...servicePackage.prices };
-        }, {})
+      const years = data.services.flatMap((service) => {
+        if (
+          selectedService.includes(service.name) ||
+          (service.dependentServices &&
+            selectedService.includes(service.dependentServices))
+        ) {
+          return Object.keys(service.prices);
+        }
+        return [];
+      });
+      const packageYears = data.servicePackages.flatMap((servicePackage) =>
+        Object.keys(servicePackage.prices)
       );
 
       const allYears = Array.from(new Set([...years, ...packageYears]));
@@ -90,7 +96,7 @@ function App() {
       console.log(servicesName);
       setServicesName(servicesName);
     }
-  }, [data]);
+  }, [data, selectedService]);
 
   // Function to handle the change of selected year in the dropdown
   const handleSelectedYear = (event: ChangeEvent<HTMLSelectElement>) => {
@@ -121,12 +127,12 @@ function App() {
 
   useEffect(() => {
     // Calculate the new price based on the selected services and year
-    const newPrice = selectedService.reduce((accumulator, service) => {
+    const newPrice = selectedService.reduce((acc, service) => {
       const foundService = data?.services.find((s) => s.name === service);
       if (foundService && foundService.prices[selectedYear]) {
-        return accumulator + foundService.prices[selectedYear];
+        return acc + foundService.prices[selectedYear];
       }
-      return accumulator;
+      return acc;
     }, 0);
 
     // Update the new price state
@@ -137,7 +143,10 @@ function App() {
     if (data) {
       const servicesWithDependentServices = data.services.filter((service) => {
         if (service.dependentServices) {
-          return selectedService.includes(service.dependentServices);
+          return (
+            selectedService.includes(service.name) ||
+            selectedService.includes(service.dependentServices)
+          );
         }
         return true;
       });
