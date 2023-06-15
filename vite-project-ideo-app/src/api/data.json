@@ -46,22 +46,22 @@
   ],
   "servicePackages": [
     {
-      "name": "Internet + telewizja",
-      "prices": {
-        "2023": 79,
-        "2024": 89,
-        "2025": 99
-      },
-      "services": ["Internet", "Telewizja"]
-    },
-    {
-      "name": "Internet + Abonament telefoniczny",
+      "name": "Internet, Abonament telefoniczny",
       "prices": {
         "2023": 64,
         "2024": 64,
         "2025": 64
       },
       "services": ["Internet", "Abonament telefoniczny"]
+    },
+    {
+      "name": "Internet, telewizja",
+      "prices": {
+        "2023": 79,
+        "2024": 89,
+        "2025": 99
+      },
+      "services": ["Internet", "Telewizja"]
     }
   ]
 }
