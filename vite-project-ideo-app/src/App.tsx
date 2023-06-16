@@ -1,10 +1,17 @@
-import teleLogo from "./assets/telelogo.jpg";
+// import teleLogo from "./assets/telelogo.jpg";
 import "./App.css";
 import jsonData from "./api/data.json";
 import { useState, useEffect } from "react";
 import { ChangeEvent } from "react";
+import { Header } from "./api/components/Header.component";
+import YearSelect from "./api/components/YearSelect.component";
+import ServiceButton from "./api/components/ServiceButton.component";
+import DependentServiceWarning from "./api/components/DependentServiceWarning.component";
+import SelectedServicePrice from "./api/components/SelectedServicePrice.component";
+import ServiceSelection from "./api/components/ServiceSelection.component";
+import BestPackage from "./api/components/BestPackage.component";
 
-interface Service {
+export interface Service {
   name: string;
   prices: {
     [year: string]: number;
@@ -12,14 +19,14 @@ interface Service {
   dependentServices?: string;
 }
 
-interface ServicePackage {
+export interface ServicePackage {
   name: string;
   prices: {
     [year: string]: number;
   };
   services: string[];
 }
-interface Data {
+export interface Data {
   services: Service[];
   servicePackages: ServicePackage[];
 }
@@ -67,7 +74,6 @@ function App() {
   useEffect(() => {
     fetchData();
     if (data !== null) {
-      console.log(data);
     }
   }, [data]);
 
@@ -131,7 +137,6 @@ function App() {
       //set the services that must be unmound to click the dependent service
       setIsDependentServiceClicked(true);
       setDependentServiceName(sameName?.name);
-      console.log(sameName?.name);
       if (servicesWithSameName) {
         const dependentServices = servicesWithSameName
           .map((s) => s.dependentServices)
@@ -168,7 +173,6 @@ function App() {
           selectedService.includes(service)
         )
       );
-      console.log(matchingPackages);
       //finding missing service among service packages from selected service
       const packagesWithMissingServices = matchingPackages.map(
         (servicePackage) => {
@@ -176,7 +180,6 @@ function App() {
           const missingServices = selectedService.filter(
             (service) => !servicePackage.services.includes(service)
           );
-          console.log(missingServices);
           // Create a copy of the package prices to update
           const updatedPrices = { ...servicePackage.prices };
 
@@ -207,11 +210,8 @@ function App() {
 
       // Set the best package and display the new price
       if (bestPackage) {
-        const newPrice = bestPackage.prices[selectedYear];
         setBestPackage(bestPackage);
         setBestPrice(bestPackage.prices[selectedYear]);
-        console.log("new price", newPrice);
-        console.log(bestPackage.prices[selectedYear]);
       } else {
         setBestPackage(null);
       }
@@ -230,8 +230,6 @@ function App() {
 
     // Update the new price state
     setPrice(newPrice);
-    console.log("price", newPrice);
-    console.log("wybrana usługa", selectedService);
 
     if (data) {
       // Get all dependent services of selected services
@@ -239,7 +237,6 @@ function App() {
         const foundService = data.services.find((s) => s.name === service);
         return foundService?.dependentServices ?? [];
       });
-      console.log("usługa zalezna", dependentServices);
 
       // Filter the services with dependent services based on the selected service and its dependents
       const servicesWithDependentServices = data.services.filter((service) => {
@@ -253,13 +250,11 @@ function App() {
         }
         return true;
       });
-      console.log(servicesWithDependentServices);
       // Get the names of the services with dependent services
       const servicesName = servicesWithDependentServices.map(
         (service) => service.name
       );
       setServicesName(servicesName);
-      console.log(servicesName);
     }
     // Calculate the best price among the packages based on the selected service
     calculateBestPrice();
@@ -267,30 +262,20 @@ function App() {
 
   return (
     <>
-      <div>
-        <header>
-          <div>
-            <img src={teleLogo} className="logo" alt="companyLogo" />
-          </div>
-        </header>
-      </div>
-      <div>
-        <h1>Kalkulator oferty Lorem Ipsum Telecomunication</h1>
-        <label htmlFor="year-select">Wybierz rok: </label>
-        <select
-          id="year-select"
-          value={selectedYear}
-          onChange={handleSelectedYear}
-        >
-          <option value="">-- Wybierz rok --</option>
-          {availableYears.map((year) => (
-            <option key={year} value={year}>
-              {year}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div>
+      <Header />
+      <h2>Lorem Impsum telecomunication calculate</h2>
+      <YearSelect
+        selectedYear={selectedYear}
+        availableYears={availableYears}
+        handleSelectedYear={handleSelectedYear}
+      />
+      <ServiceSelection
+        servicesName={servicesName}
+        selectedService={selectedService}
+        selectedYear={selectedYear}
+        data={data}
+        handleServiceClick={handleServiceClick}
+      >
         <label>Wybierz usługę:</label>
         {servicesName.map((service, index) => {
           const isSelected = selectedService.includes(service);
@@ -303,49 +288,28 @@ function App() {
                 selectedService.includes(s.name)
             );
           return (
-            <button
+            <ServiceButton
               key={index}
-              onClick={() => handleServiceClick(service, isDependent)}
-              style={{
-                background: isSelected ? "green" : "white",
-                pointerEvents: isYearSelected ? "auto" : "none",
-              }}
-              disabled={!isYearSelected}
-            >
-              {service}
-            </button>
+              service={service}
+              isSelected={isSelected}
+              isYearSelected={isYearSelected}
+              isDependent={isDependent}
+              handleServiceClick={handleServiceClick}
+            />
           );
         })}
-      </div>
-      <div>
-        {isDependentServiceClicked && (
-          <p style={{ color: "red" }}>
-            Wyłącz najpierw usługę zależną: {dependentServiceName}
-          </p>
-        )}
-      </div>
-      <div>
-        <label>Cena wybranej usługi:</label>
-        {selectedServicePrice !== null ? (
-          <span
-            style={{
-              textDecoration: bestPackage !== null ? "line-through" : "none",
-              color: bestPackage !== null ? "red" : "inherit",
-            }}
-          >
-            {" "}
-            {price}zł
-          </span>
-        ) : (
-          <span>Brak danych</span>
-        )}
-      </div>
-      {bestPackage && (
-        <div>
-          <h2>Najkorzystniejszy oferta:</h2>
-          <p>Cena: {bestPrice}zł</p>
-        </div>
-      )}
+      </ServiceSelection>
+      <DependentServiceWarning
+        dependentServiceName={dependentServiceName}
+        isDependentServiceClicked={isDependentServiceClicked}
+      />
+      <SelectedServicePrice
+        selectedServicePrice={selectedServicePrice}
+        price={price}
+        bestPackage={bestPackage}
+      />
+
+      {bestPackage && <BestPackage bestPrice={bestPrice} />}
     </>
   );
 }
