@@ -35,6 +35,12 @@ function App() {
   >(null);
   const [price, setPrice] = useState<number>();
   const [bestPackage, setBestPackage] = useState<ServicePackage | null>(null);
+  const [bestPrice, setBestPrice] = useState<number | null>();
+  const [isDependentServiceClicked, setIsDependentServiceClicked] =
+    useState<boolean>();
+  const [dependentServiceName, setDependentServiceName] = useState<
+    string | undefined
+  >();
 
   const fetchData = async () => {
     try {
@@ -86,14 +92,6 @@ function App() {
       const sortedAllYears = allYears.sort((a, b) => Number(a) - Number(b));
 
       setAvailableYears(sortedAllYears);
-
-      //checking available services, setting an exception on dependent services
-      const filteredServices = data.services.filter(
-        (service) => !service.dependentServices
-      );
-      const servicesName = filteredServices.map((service) => service.name);
-      console.log(servicesName);
-      setServicesName(servicesName);
     }
   }, [data, selectedService]);
 
@@ -103,17 +101,52 @@ function App() {
   };
 
   // Function to handle the click event on a service button
-  const handleServiceClick = (service: string) => {
+  const handleServiceClick = (
+    service: string,
+    isDependent: boolean | undefined
+  ) => {
     if (selectedService.includes(service)) {
-      // Remove the service from the list if it is already selected
+      //delete from list service if it's already chosed
       setSelectedService(
         selectedService.filter((selected) => selected !== service)
       );
     } else {
-      // Add the service to the list if it is not yet selected
+      // Add the service to the list if it is not already selected
       setSelectedService([...selectedService, service]);
     }
-    //check if service exist in data and if, set price for choosen year
+
+    // Check if the service is dependent and if so, block other services with the same name
+    if (isDependent) {
+      const servicesWithSameName = data?.services.filter(
+        (s) => s.name === service
+      );
+      const nameOfDependentService: string[] = servicesWithSameName?.map(
+        (name) => name.name
+      )!;
+      const sameName = data?.services.find(
+        (name) =>
+          name.dependentServices &&
+          name.dependentServices.includes(nameOfDependentService[0])
+      );
+      //set the services that must be unmound to click the dependent service
+      setIsDependentServiceClicked(true);
+      setDependentServiceName(sameName?.name);
+      console.log(sameName?.name);
+      if (servicesWithSameName) {
+        const dependentServices = servicesWithSameName
+          .map((s) => s.dependentServices)
+          .flat();
+        setSelectedService(
+          selectedService.filter(
+            (selected) => !dependentServices.includes(selected)
+          )
+        );
+      }
+    } else {
+      setIsDependentServiceClicked(false);
+    }
+
+    // Check if the service exists in the data and if so, set the price for the selected year
     if (data) {
       const foundService = data.services.find(
         (services) => services.name === service
@@ -176,7 +209,9 @@ function App() {
       if (bestPackage) {
         const newPrice = bestPackage.prices[selectedYear];
         setBestPackage(bestPackage);
+        setBestPrice(bestPackage.prices[selectedYear]);
         console.log("new price", newPrice);
+        console.log(bestPackage.prices[selectedYear]);
       } else {
         setBestPackage(null);
       }
@@ -199,17 +234,26 @@ function App() {
     console.log("wybrana usługa", selectedService);
 
     if (data) {
-      // Filter the services with dependent services based on the selected service
+      // Get all dependent services of selected services
+      let dependentServices = selectedService.flatMap((service) => {
+        const foundService = data.services.find((s) => s.name === service);
+        return foundService?.dependentServices ?? [];
+      });
+      console.log("usługa zalezna", dependentServices);
+
+      // Filter the services with dependent services based on the selected service and its dependents
       const servicesWithDependentServices = data.services.filter((service) => {
+        if (dependentServices.includes(service.name)) {
+          return true;
+        }
         if (service.dependentServices) {
-          return (
-            selectedService.includes(service.name) ||
-            selectedService.includes(service.dependentServices)
+          return selectedService.some((selected) =>
+            service.dependentServices?.includes(selected)
           );
         }
         return true;
       });
-
+      console.log(servicesWithDependentServices);
       // Get the names of the services with dependent services
       const servicesName = servicesWithDependentServices.map(
         (service) => service.name
@@ -251,10 +295,17 @@ function App() {
         {servicesName.map((service, index) => {
           const isSelected = selectedService.includes(service);
           const isYearSelected = selectedYear !== "";
+          const isDependent = data?.services
+            .filter((s) => s.dependentServices)
+            .some(
+              (s) =>
+                s.dependentServices?.includes(service) &&
+                selectedService.includes(s.name)
+            );
           return (
             <button
               key={index}
-              onClick={() => handleServiceClick(service)}
+              onClick={() => handleServiceClick(service, isDependent)}
               style={{
                 background: isSelected ? "green" : "white",
                 pointerEvents: isYearSelected ? "auto" : "none",
@@ -265,6 +316,13 @@ function App() {
             </button>
           );
         })}
+      </div>
+      <div>
+        {isDependentServiceClicked && (
+          <p style={{ color: "red" }}>
+            Wyłącz najpierw usługę zależną: {dependentServiceName}
+          </p>
+        )}
       </div>
       <div>
         <label>Cena wybranej usługi:</label>
@@ -285,7 +343,7 @@ function App() {
       {bestPackage && (
         <div>
           <h2>Najkorzystniejszy oferta:</h2>
-          <p>Cena: {bestPackage.prices[selectedYear]}zł</p>
+          <p>Cena: {bestPrice}zł</p>
         </div>
       )}
     </>
